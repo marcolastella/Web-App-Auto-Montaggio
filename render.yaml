@@ -1,0 +1,12 @@
+# render.yaml - One-click Render deployment
+services:
+  - type: web
+    name: autovideo-web
+    env: docker
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: MAX_CONTENT_LENGTH_MB
+        value: 4096
+      - key: PORT
+        value: 8000
