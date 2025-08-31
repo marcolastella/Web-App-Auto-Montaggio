@@ -1,0 +1,7 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2 class="title">Pronto! 🎉</h2>
+<p>Il tuo video è stato elaborato con successo.</p>
+<p><a class="button" href="{{ url_for('download', job_id=job_id) }}">Scarica: {{ file_name }}</a></p>
+<p><a href="{{ url_for('index') }}">Elabora un altro video</a></p>
+{% endblock %}

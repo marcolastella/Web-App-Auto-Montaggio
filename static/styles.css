@@ -1,0 +1,21 @@
+*{box-sizing:border-box}body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;background:#0f1115;color:#eaeef3;margin:0}
+.container{max-width:900px;margin:0 auto;padding:24px}
+header h1{margin:0 0 8px 0;font-size:28px}
+.title{margin:8px 0 0 0}
+.subtitle{opacity:.8;margin:4px 0 16px}
+.form{background:#151923;border:1px solid #22283a;border-radius:12px;padding:16px}
+.field{margin:12px 0;display:flex;flex-direction:column}
+.field label{font-size:14px;margin-bottom:6px;opacity:.9}
+.field input[type="text"],.field input[type="number"]{padding:10px;border-radius:8px;border:1px solid #2b3247;background:#0d1118;color:#eaeef3}
+.field input[type="file"]{padding:8px;background:#0d1118;border-radius:8px;border:1px dashed #2b3247}
+.advanced{margin-top:12px;border:1px solid #2b3247;padding:8px;border-radius:8px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.grid .full{grid-column:1/-1}
+.checkbox{display:flex;align-items:center;gap:8px;margin-top:6px}
+.actions{margin-top:16px}
+button,.button{display:inline-block;background:#6aa0ff;border:none;color:#081020;font-weight:700;padding:10px 14px;border-radius:10px;cursor:pointer;text-decoration:none}
+button:hover,.button:hover{filter:brightness(1.1)}
+.messages{list-style:none;padding:0;margin:10px 0 0 0}
+.messages li{padding:8px;border-radius:8px;margin-bottom:6px}
+.messages li.error{background:#381b1b;border:1px solid #7a3b3b}
+footer{opacity:.55;margin-top:16px;font-size:12px}
