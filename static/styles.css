@@ -6,7 +6,7 @@ header h1{margin:0 0 8px 0;font-size:28px}
 .form{background:#151923;border:1px solid #22283a;border-radius:12px;padding:16px}
 .field{margin:12px 0;display:flex;flex-direction:column}
 .field label{font-size:14px;margin-bottom:6px;opacity:.9}
-.field input[type="text"],.field input[type="number"]{padding:10px;border-radius:8px;border:1px solid #2b3247;background:#0d1118;color:#eaeef3}
+.field input[type="text"],.field input[type="number"],.field input[type="url"]{padding:10px;border-radius:8px;border:1px solid #2b3247;background:#0d1118;color:#eaeef3}
 .field input[type="file"]{padding:8px;background:#0d1118;border-radius:8px;border:1px dashed #2b3247}
 .advanced{margin-top:12px;border:1px solid #2b3247;padding:8px;border-radius:8px}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}

@@ -1,7 +1,6 @@
 # Dockerfile
 FROM python:3.11-slim
 
-# Install ffmpeg and fonts
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg fonts-dejavu-core && \
     rm -rf /var/lib/apt/lists/*
@@ -17,8 +16,6 @@ ENV MAX_CONTENT_LENGTH_MB=4096
 ENV PORT=8000
 
 COPY . .
-
-# Create folders
 RUN mkdir -p /app/uploads /app/outputs
 
 EXPOSE 8000

@@ -1,6 +1,6 @@
-# app.py
-import os
-import uuid
+# app.py - URL support (Dropbox etc.) + health endpoint
+import os, uuid
+import requests
 from flask import Flask, render_template, request, redirect, url_for, send_file, flash
 from werkzeug.utils import secure_filename
 from processing import process_interview, DEFAULT_FONT_PATH
@@ -10,9 +10,6 @@ OUTPUT_FOLDER = os.environ.get("OUTPUT_FOLDER", "./outputs")
 MAX_CONTENT_LENGTH_MB = float(os.environ.get("MAX_CONTENT_LENGTH_MB", "4096"))  # 4 GB default
 
 app = Flask(__name__)
-@app.route("/health")
-def health():
-    return "ok", 200
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-me")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["OUTPUT_FOLDER"] = OUTPUT_FOLDER
@@ -24,19 +21,56 @@ def ensure_dirs():
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
     os.makedirs(app.config["OUTPUT_FOLDER"], exist_ok=True)
 
+@app.route("/health")
+def health():
+    return "ok", 200
+
 @app.route("/", methods=["GET"])
 def index():
     ensure_dirs()
     return render_template("index.html", default_font=DEFAULT_FONT_PATH)
 
+def _save_upload(file_storage):
+    fname = secure_filename(file_storage.filename)
+    ext = os.path.splitext(fname)[1]
+    if ext not in ALLOWED_VIDEO_EXTS:
+        raise ValueError(f"Estensione non supportata: {ext}")
+    path = os.path.join(app.config["UPLOAD_FOLDER"], f"{uuid.uuid4().hex[:8]}_{fname}")
+    file_storage.save(path)
+    return path
+
+def _normalize_dropbox(url: str) -> str:
+    if "dropbox.com" in url and "dl=0" in url:
+        url = url.replace("dl=0", "dl=1")
+    elif "dropbox.com" in url and "dl=1" not in url and "raw=1" not in url:
+        sep = "&" if "?" in url else "?"
+        url = f"{url}{sep}dl=1"
+    return url
+
+def _download_url_to_uploads(url: str) -> str:
+    url = _normalize_dropbox(url.strip())
+    import urllib.parse
+    parsed = urllib.parse.urlparse(url)
+    base = os.path.basename(parsed.path) or "file.mp4"
+    base = secure_filename(base)
+    if not os.path.splitext(base)[1]:
+        base += ".mp4"
+    local = os.path.join(app.config["UPLOAD_FOLDER"], f"url_{uuid.uuid4().hex[:6]}_{base}")
+    with requests.get(url, stream=True, timeout=120) as r:
+        r.raise_for_status()
+        with open(local, "wb") as f:
+            for chunk in r.iter_content(chunk_size=1024*1024):
+                if chunk:
+                    f.write(chunk)
+    return local
+
 @app.route("/process", methods=["POST"])
 def process():
     ensure_dirs()
+    intro_url = (request.form.get("intro_url") or "").strip()
+    main_url  = (request.form.get("main_url") or "").strip()
+    outro_url = (request.form.get("outro_url") or "").strip()
 
-    # Validate inputs
-    intro_file = request.files.get("intro")
-    main_file  = request.files.get("main")
-    outro_file = request.files.get("outro")
     lower_text = (request.form.get("lower") or "").strip()
     lower_duration = float(request.form.get("lower_duration") or "10")
     fontsize = int(request.form.get("fontsize") or "56")
@@ -48,31 +82,43 @@ def process():
     if not out_name.lower().endswith(".mp4"):
         out_name += ".mp4"
 
-    if not intro_file or not main_file or not outro_file or not lower_text:
-        flash("Carica intro, main, outro e inserisci il testo del sottopancia.", "error")
+    if not lower_text:
+        flash("Inserisci il testo del sottopancia.", "error")
         return redirect(url_for("index"))
-
-    def _save(file_storage):
-        fname = secure_filename(file_storage.filename)
-        ext = os.path.splitext(fname)[1]
-        if ext not in ALLOWED_VIDEO_EXTS:
-            raise ValueError(f"Estensione non supportata: {ext}")
-        uid = str(uuid.uuid4())[:8]
-        path = os.path.join(app.config["UPLOAD_FOLDER"], f"{uid}_{fname}")
-        file_storage.save(path)
-        return path
 
     try:
-        intro_path = _save(intro_file)
-        main_path  = _save(main_file)
-        outro_path = _save(outro_file)
+        if intro_url:
+            intro_path = _download_url_to_uploads(intro_url)
+        else:
+            intro_file = request.files.get("intro")
+            if not intro_file or intro_file.filename == "":
+                flash("Carica l'intro o inserisci un URL.", "error")
+                return redirect(url_for("index"))
+            intro_path = _save_upload(intro_file)
+
+        if main_url:
+            main_path = _download_url_to_uploads(main_url)
+        else:
+            main_file = request.files.get("main")
+            if not main_file or main_file.filename == "":
+                flash("Carica l'intervista o inserisci un URL.", "error")
+                return redirect(url_for("index"))
+            main_path = _save_upload(main_file)
+
+        if outro_url:
+            outro_path = _download_url_to_uploads(outro_url)
+        else:
+            outro_file = request.files.get("outro")
+            if not outro_file or outro_file.filename == "":
+                flash("Carica l'outro o inserisci un URL.", "error")
+                return redirect(url_for("index"))
+            outro_path = _save_upload(outro_file)
     except Exception as e:
-        flash(f"Errore upload: {e}", "error")
+        flash(f"Errore nel download/upload: {e}", "error")
         return redirect(url_for("index"))
 
-    job_id = str(uuid.uuid4())[:12]
+    job_id = uuid.uuid4().hex[:12]
     output_path = os.path.join(app.config["OUTPUT_FOLDER"], f"{job_id}_{secure_filename(out_name)}")
-
     try:
         process_interview(
             intro=intro_path,
@@ -95,7 +141,6 @@ def process():
 
 @app.route("/result/<job_id>")
 def result(job_id):
-    # Find the file with prefix job_id_
     for name in os.listdir(app.config["OUTPUT_FOLDER"]):
         if name.startswith(f"{job_id}_"):
             file_name = name

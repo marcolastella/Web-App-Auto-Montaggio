@@ -1,4 +1,4 @@
-# processing.py (FIXED drawtext: options joined with colon ':')
+# processing.py (colon-separated drawtext options; fixed)
 import os, json, subprocess, tempfile, shutil
 
 def _run(cmd):
@@ -54,7 +54,6 @@ def get_video_params(path):
 DEFAULT_FONT_PATH = os.environ.get("DEFAULT_FONT_PATH", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
 
 def build_lowerthird_drawtext(text, fontfile=None, fontsize=56, margin_x=60, margin_y=80, box_opacity=0.55, duration=10.0):
-    # Escape characters that break ffmpeg arg parsing
     text_escaped = text.replace("\\", r"\\\\").replace(":", r"\:").replace("'", r"\'").replace(",", r"\,")
     parts = [
         f"drawtext=text='{text_escaped}'",
@@ -70,7 +69,6 @@ def build_lowerthird_drawtext(text, fontfile=None, fontsize=56, margin_x=60, mar
     ]
     if fontfile:
         parts.append(f"fontfile='{fontfile}'")
-    # drawtext options must be colon-separated
     return ":".join(parts)
 
 def process_segment(inp, outp, target_w, target_h, target_fps, audio_index=None,
@@ -116,13 +114,11 @@ def process_interview(intro, main, outro, lower, lower_duration, fontfile, fonts
                       denoise, lufs_target, tp_limit, out_path):
     ensure_ffmpeg()
     w,h,fps = get_video_params(main)
-    import tempfile
     with tempfile.TemporaryDirectory() as td:
         tmp_intro = os.path.join(td, "00_intro.mp4")
         tmp_main  = os.path.join(td, "01_main.mp4")
         tmp_outro = os.path.join(td, "02_outro.mp4")
 
-        from json import loads
         process_segment(intro, tmp_intro, w,h,fps,
                         audio_index=select_primary_audio_index(ffprobe_streams(intro)),
                         lower_text=None, lower_duration=0, fontfile=fontfile, fontsize=fontsize,

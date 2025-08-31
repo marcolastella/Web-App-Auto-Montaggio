@@ -1,63 +1,34 @@
 {% extends "layout.html" %}
 {% block content %}
-<h2 class="title">AutoVideo Interview – Web</h2>
-<p class="subtitle">Intro → Intervista → Outro, audio pulito/compresso, True Peak −0.1 dB, sottopancia automatico</p>
+<h2 class="title">AutoVideo Interview – Web (URL ready)</h2>
+<p class="subtitle">Carica i file oppure incolla gli URL diretti (es. Dropbox con <code>dl=1</code>).</p>
 
 <form action="{{ url_for('process') }}" method="post" enctype="multipart/form-data" class="form">
-  <div class="field">
-    <label>Intro (mp4/mov)</label>
-    <input type="file" name="intro" accept=".mp4,.mov" required>
-  </div>
-  <div class="field">
-    <label>Intervista (mkv/mp4/mov)</label>
-    <input type="file" name="main" accept=".mkv,.mp4,.mov" required>
-  </div>
-  <div class="field">
-    <label>Outro (mp4/mov)</label>
-    <input type="file" name="outro" accept=".mp4,.mov" required>
-  </div>
-  <div class="field">
-    <label>Testo sottopancia</label>
-    <input type="text" name="lower" placeholder="Nome Cognome – Ruolo" required>
-  </div>
+  <div class="field"><label>Intro (file)</label><input type="file" name="intro" accept=".mp4,.mov"></div>
+  <div class="field"><label>Intro URL (opzionale)</label><input type="url" name="intro_url" placeholder="https://.../intro.mp4"></div>
+
+  <div class="field"><label>Intervista (file)</label><input type="file" name="main" accept=".mkv,.mp4,.mov"></div>
+  <div class="field"><label>Main URL (opzionale)</label><input type="url" name="main_url" placeholder="https://www.dropbox.com/s/abc123/intervista.mkv?dl=1"></div>
+
+  <div class="field"><label>Outro (file)</label><input type="file" name="outro" accept=".mp4,.mov"></div>
+  <div class="field"><label>Outro URL (opzionale)</label><input type="url" name="outro_url" placeholder="https://.../outro.mp4"></div>
+
+  <div class="field"><label>Sottopancia</label><input type="text" name="lower" placeholder="Nome Cognome – Ruolo" required></div>
 
   <details class="advanced">
     <summary>Opzioni avanzate</summary>
     <div class="grid">
-      <div>
-        <label>Durata sottopancia (s)</label>
-        <input type="number" name="lower_duration" value="10" step="1" min="1">
-      </div>
-      <div>
-        <label>Font size</label>
-        <input type="number" name="fontsize" value="56" step="1" min="10">
-      </div>
-      <div>
-        <label>LUFS target</label>
-        <input type="number" name="lufs" value="-16" step="0.1">
-      </div>
-      <div>
-        <label>True Peak (dB)</label>
-        <input type="number" name="tp" value="-0.1" step="0.1">
-      </div>
-      <div class="full">
-        <label>Font file (TTF/OTF – lascia vuoto per default)</label>
-        <input type="text" name="fontfile" placeholder="{{ default_font }}">
-        <small>Default: {{ default_font }}</small>
-      </div>
-      <div>
-        <label>Nome file output</label>
-        <input type="text" name="out" value="intervista_finale.mp4">
-      </div>
-      <div class="checkbox">
-        <label><input type="checkbox" name="denoise" checked> Riduzione rumore</label>
-      </div>
+      <div><label>Durata (s)</label><input type="number" name="lower_duration" value="10"></div>
+      <div><label>Font size</label><input type="number" name="fontsize" value="56"></div>
+      <div><label>LUFS</label><input type="number" name="lufs" value="-16" step="0.1"></div>
+      <div><label>True Peak</label><input type="number" name="tp" value="-0.1" step="0.1"></div>
+      <div class="full"><label>Font file</label><input type="text" name="fontfile" placeholder="{{ default_font }}"></div>
+      <div class="checkbox"><label><input type="checkbox" name="denoise" checked> Riduzione rumore</label></div>
+      <div><label>Output</label><input type="text" name="out" value="intervista_finale.mp4"></div>
     </div>
   </details>
 
-  <div class="actions">
-    <button type="submit">Elabora</button>
-  </div>
+  <div class="actions"><button type="submit">Elabora</button></div>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
