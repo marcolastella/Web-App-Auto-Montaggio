@@ -10,6 +10,9 @@ OUTPUT_FOLDER = os.environ.get("OUTPUT_FOLDER", "./outputs")
 MAX_CONTENT_LENGTH_MB = float(os.environ.get("MAX_CONTENT_LENGTH_MB", "4096"))  # 4 GB default
 
 app = Flask(__name__)
+@app.route("/health")
+def health():
+    return "ok", 200
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-me")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["OUTPUT_FOLDER"] = OUTPUT_FOLDER
